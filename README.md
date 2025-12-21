@@ -1,0 +1,73 @@
+# DSPy Skills Collection
+
+A comprehensive collection of AI-powered skills for programming and optimizing LLM applications using the **DSPy** framework. These skills enable you to move from manual prompt engineering to systematic, programmatic LLM development.
+
+## 🎯 What is DSPy?
+
+DSPy is a declarative framework that lets you *program* language models instead of *prompting* them. It provides:
+- **Modular architecture** - Compose LLM programs from reusable components
+- **Automatic optimization** - Tune prompts, examples, and weights algorithmically
+- **Self-improving pipelines** - Systems that get better with data
+
+## 📚 Skills Index
+
+### Optimizers
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-bootstrap-fewshot](skills/dspy-bootstrap-fewshot/SKILL.md) | Auto-generate few-shot examples | Quick optimization with ~10 examples |
+| [dspy-miprov2-optimizer](skills/dspy-miprov2-optimizer/SKILL.md) | Bayesian instruction+demo optimization | 200+ examples, comprehensive tuning |
+| [dspy-gepa-reflective](skills/dspy-gepa-reflective/SKILL.md) | LLM reflection on execution traces | Agentic systems, complex workflows |
+| [dspy-finetune-bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) | Fine-tune model weights | Production deployment, efficiency |
+
+### Pipelines & Components
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-rag-pipeline](skills/dspy-rag-pipeline/SKILL.md) | RAG with ColBERTv2 retrieval | Knowledge-grounded generation |
+| [dspy-signature-designer](skills/dspy-signature-designer/SKILL.md) | Design type-safe I/O specs | Clean, validated outputs |
+| [dspy-evaluation-suite](skills/dspy-evaluation-suite/SKILL.md) | Metrics and evaluation | Quality assessment |
+| [dspy-haystack-integration](skills/dspy-haystack-integration/SKILL.md) | DSPy + Haystack pipelines | Existing Haystack projects |
+
+## 📖 Documentation
+
+- [DSPy Framework Guide](docs/dspy-framework.md) - Complete framework reference
+
+## 🚀 Installation
+
+```bash
+pip install dspy-ai
+```
+
+### Optional Dependencies
+
+```bash
+# For ColBERTv2 retrieval
+pip install colbert-ai
+
+# For Haystack integration
+pip install haystack-ai
+
+# For fine-tuning
+pip install transformers datasets
+```
+
+## 💡 Quick Start
+
+```python
+import dspy
+
+# Configure LM
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+# Create a simple classifier
+classify = dspy.Predict("text -> sentiment: bool")
+result = classify(text="I love this product!")
+print(result.sentiment)  # True
+```
+
+## 📁 Examples
+
+See [examples/code-snippets.py](examples/code-snippets.py) for production-ready code.
+
+---
+
+*Built for the SkillsMP marketplace*
