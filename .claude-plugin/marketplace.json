@@ -1,0 +1,50 @@
+{
+  "name": "dspy-skills",
+  "owner": {
+    "name": "OmidZamani",
+    "url": "https://github.com/OmidZamani"
+  },
+  "description": "Collection of skills for DSPy framework - program language models, optimize prompts, and build RAG pipelines systematically.",
+  "plugins": [
+    {
+      "name": "dspy-rag-pipeline",
+      "source": "skills/dspy-rag-pipeline",
+      "description": "Build and optimize RAG pipelines with ColBERTv2 retrieval in DSPy"
+    },
+    {
+      "name": "dspy-bootstrap-fewshot",
+      "source": "skills/dspy-bootstrap-fewshot",
+      "description": "Bootstrap few-shot examples for DSPy prompt optimization"
+    },
+    {
+      "name": "dspy-evaluation-suite",
+      "source": "skills/dspy-evaluation-suite",
+      "description": "Comprehensive evaluation framework for DSPy programs"
+    },
+    {
+      "name": "dspy-finetune-bootstrap",
+      "source": "skills/dspy-finetune-bootstrap",
+      "description": "Fine-tune language models using bootstrapped DSPy examples"
+    },
+    {
+      "name": "dspy-gepa-reflective",
+      "source": "skills/dspy-gepa-reflective",
+      "description": "Generalized Error-driven Prompt Adaptation with reflection"
+    },
+    {
+      "name": "dspy-haystack-integration",
+      "source": "skills/dspy-haystack-integration",
+      "description": "Integrate DSPy with Haystack for advanced NLP pipelines"
+    },
+    {
+      "name": "dspy-miprov2-optimizer",
+      "source": "skills/dspy-miprov2-optimizer",
+      "description": "MIPROv2 optimizer for automatic prompt engineering"
+    },
+    {
+      "name": "dspy-signature-designer",
+      "source": "skills/dspy-signature-designer",
+      "description": "Design and optimize DSPy signatures for language model programs"
+    }
+  ]
+}
