@@ -85,9 +85,11 @@ mlflow.set_experiment("DSPy")
 
 # 2. Enable DSPy autologging
 mlflow.dspy.autolog(
-    log_traces=True,     # Log traces from module executions
-    log_compiles=True,   # Log optimization progress
-    log_evals=True       # Log evaluation results
+    log_traces=True,              # Log traces during inference
+    log_traces_from_compile=True, # Log traces when compiling/optimizing
+    log_traces_from_eval=True,    # Log traces during evaluation
+    log_compiles=True,            # Log optimization process info
+    log_evals=True                # Log evaluation call info
 )
 
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
@@ -122,7 +124,7 @@ import dspy
 from dspy.utils.callback import BaseCallback
 import logging
 import time
-from typing import Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -137,11 +139,11 @@ class ProductionMonitoringCallback(BaseCallback):
         self.errors = []
         self.start_times = {}
 
-    def on_lm_start(self, call_id, instance, inputs):
+    def on_lm_start(self, call_id: str, instance: Any, inputs: dict[str, Any]):
         """Called when LM is invoked."""
         self.start_times[call_id] = time.time()
 
-    def on_lm_end(self, call_id, outputs, exception):
+    def on_lm_end(self, call_id: str, outputs: dict[str, Any] | None, exception: Exception | None = None):
         """Called after LM finishes."""
         if exception:
             self.errors.append(str(exception))
@@ -164,7 +166,7 @@ class ProductionMonitoringCallback(BaseCallback):
 
         logger.info(f"LLM call: {latency:.2f}s, {tokens} tokens, ${cost:.4f}")
 
-    def _estimate_cost(self, model: str, usage: Dict[str, int]) -> float:
+    def _estimate_cost(self, model: str, usage: dict[str, int]) -> float:
         """Estimate cost based on model pricing (update rates for 2026)."""
         pricing = {
             'gpt-4o-mini': {'input': 0.00015 / 1000, 'output': 0.0006 / 1000},
@@ -175,7 +177,7 @@ class ProductionMonitoringCallback(BaseCallback):
         output_cost = usage.get('completion_tokens', 0) * pricing[model_key]['output']
         return input_cost + output_cost
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Return aggregated metrics."""
         return {
             'total_cost': self.total_cost,
@@ -208,6 +210,7 @@ For high-traffic applications, sample traces to reduce overhead:
 ```python
 import random
 from dspy.utils.callback import BaseCallback
+from typing import Any
 
 class SamplingCallback(BaseCallback):
     """Sample 10% of traces."""
@@ -217,7 +220,7 @@ class SamplingCallback(BaseCallback):
         self.sample_rate = sample_rate
         self.sampled_calls = []
 
-    def on_lm_end(self, call_id, outputs, exception):
+    def on_lm_end(self, call_id: str, outputs: dict[str, Any] | None, exception: Exception | None = None):
         """Sample a subset of LM calls."""
         if random.random() < self.sample_rate:
             self.sampled_calls.append({

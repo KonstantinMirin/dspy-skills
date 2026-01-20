@@ -55,10 +55,17 @@ from dspy.teleprompt import Ensemble
 
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 
-# Create multiple program instances (must be optimized/compiled programs)
-program1 = dspy.Predict("question -> answer")
-program2 = dspy.ChainOfThought("question -> answer")
-program3 = dspy.Predict("question -> answer")
+# Define a signature for the task
+class BasicQA(dspy.Signature):
+    """Answer questions with short factoid answers."""
+    question = dspy.InputField()
+    answer = dspy.OutputField()
+
+# Create multiple program instances (should be optimized/compiled programs)
+# For simple demonstration, we'll use different predictors
+program1 = dspy.Predict(BasicQA)
+program2 = dspy.ChainOfThought(BasicQA)
+program3 = dspy.Predict(BasicQA)
 
 # Ensemble is an optimizer that compiles programs together
 ensemble = Ensemble(reduce_fn=dspy.majority)
@@ -76,29 +83,38 @@ Compare multiple reasoning attempts:
 ```python
 import dspy
 
+class BasicQA(dspy.Signature):
+    """Answer questions with short factoid answers."""
+    question = dspy.InputField()
+    answer = dspy.OutputField(desc="often between 1 and 5 words")
+
 class ComparisonPipeline(dspy.Module):
     def __init__(self):
         # Generate multiple reasoning attempts
-        self.cot = dspy.ChainOfThought("question -> answer")
+        self.cot = dspy.ChainOfThought(BasicQA)
 
         # Compare M attempts and select best
+        # Must pass a Signature class, not a string
         self.compare = dspy.MultiChainComparison(
-            signature="question -> answer",
+            BasicQA,
             M=3,  # Number of attempts to compare
             temperature=0.7
         )
 
     def forward(self, question):
         # Generate multiple completions to compare
+        # Each completion must have rationale/reasoning field
         completions = [
             self.cot(question=question)
             for _ in range(3)
         ]
 
         # MultiChainComparison synthesizes them into best answer
-        return self.compare(completions=completions, question=question)
+        # Pass completions as positional arg, not keyword arg
+        return self.compare(completions, question=question)
 
 # Usage
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 pipeline = ComparisonPipeline()
 result = pipeline(question="Explain quantum computing")
 print(f"Best answer: {result.answer}")
@@ -112,21 +128,40 @@ Chain modules for multi-step workflows:
 ```python
 import dspy
 
+# Define signatures for each step
+class QueryRewrite(dspy.Signature):
+    """Rewrite a question for better retrieval."""
+    question = dspy.InputField()
+    refined_query: str = dspy.OutputField()
+
+class GenerateAnswer(dspy.Signature):
+    """Generate answer from context and question."""
+    context = dspy.InputField()
+    question = dspy.InputField()
+    answer = dspy.OutputField()
+
+class ValidateAnswer(dspy.Signature):
+    """Validate answer quality."""
+    answer = dspy.InputField()
+    question = dspy.InputField()
+    is_valid: bool = dspy.OutputField()
+    confidence: float = dspy.OutputField()
+
 class SequentialRAG(dspy.Module):
     """Multi-step RAG pipeline."""
 
     def __init__(self):
         # Step 1: Query rewriting
-        self.rewrite = dspy.Predict("question -> refined_query: str")
+        self.rewrite = dspy.Predict(QueryRewrite)
 
         # Step 2: Retrieval
         self.retrieve = dspy.Retrieve(k=5)
 
         # Step 3: Answer generation
-        self.generate = dspy.ChainOfThought("context, question -> answer")
+        self.generate = dspy.ChainOfThought(GenerateAnswer)
 
         # Step 4: Validation
-        self.validate = dspy.Predict("answer, question -> is_valid: bool, confidence: float")
+        self.validate = dspy.Predict(ValidateAnswer)
 
     def forward(self, question):
         # Sequential execution
@@ -150,6 +185,7 @@ class SequentialRAG(dspy.Module):
         )
 
 # Usage
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 rag = SequentialRAG()
 result = rag(question="What causes lightning?")
 print(f"Answer: {result.answer} (valid: {result.is_valid})")
@@ -165,12 +201,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class BasicQA(dspy.Signature):
+    """Answer questions with short factoid answers."""
+    question = dspy.InputField()
+    answer = dspy.OutputField()
+
 class RobustQA(dspy.Module):
     """Fallback strategy for errors."""
 
     def __init__(self):
-        self.primary = dspy.ChainOfThought("question -> answer")
-        self.fallback = dspy.Predict("question -> answer")
+        self.primary = dspy.ChainOfThought(BasicQA)
+        self.fallback = dspy.Predict(BasicQA)
 
     def forward(self, question):
         try:
@@ -189,12 +230,18 @@ class RobustQA(dspy.Module):
 import dspy
 from dspy.teleprompt import BootstrapFewShot, Ensemble
 
+class GenerateAnswer(dspy.Signature):
+    """Generate answer from context and question."""
+    context = dspy.InputField()
+    question = dspy.InputField()
+    answer = dspy.OutputField()
+
 class MultiStrategyQA(dspy.Module):
     """Production QA with retrieval."""
 
     def __init__(self):
         self.retrieve = dspy.Retrieve(k=3)
-        self.generate = dspy.ChainOfThought("context, question -> answer")
+        self.generate = dspy.ChainOfThought(GenerateAnswer)
 
     def forward(self, question: str):
         context = self.retrieve(question).passages

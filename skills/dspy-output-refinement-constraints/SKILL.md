@@ -2,7 +2,7 @@
 name: dspy-output-refinement-constraints
 version: "1.0.0"
 dspy-compatibility: "3.1.2"
-description: This skill should be used when the user asks to "refine DSPy outputs", "enforce constraints", "use dspy.Refine", "select best output", "use dspy.BestofN", mentions "output validation", "constraint checking", "multi-attempt generation", "reward function", or needs to improve output quality through iterative refinement or best-of-N selection with custom constraints.
+description: This skill should be used when the user asks to "refine DSPy outputs", "enforce constraints", "use dspy.Refine", "select best output", "use dspy.BestOfN", mentions "output validation", "constraint checking", "multi-attempt generation", "reward function", or needs to improve output quality through iterative refinement or best-of-N selection with custom constraints.
 allowed-tools:
   - Read
   - Write
@@ -14,7 +14,7 @@ allowed-tools:
 
 ## Goal
 
-Improve output quality using iterative refinement (dspy.Refine) and best-of-N selection (dspy.BestofN) with custom constraint validation.
+Improve output quality using iterative refinement (dspy.Refine) and best-of-N selection (dspy.BestOfN) with custom constraint validation.
 
 ## When to Use
 
@@ -83,7 +83,7 @@ result = refined_summarizer(document="Long document text here...")
 print(result.summary)
 ```
 
-### Phase 2: dspy.BestofN for Selection
+### Phase 2: dspy.BestOfN for Selection
 
 Generate N outputs and pick the best:
 
@@ -103,9 +103,9 @@ def json_reward(args, pred):
     except json.JSONDecodeError:
         return 0.0
 
-# BestofN: try 5 times, pick best
+# BestOfN: try 5 times, pick best
 extractor = dspy.Predict("text -> output: str")
-best_extractor = dspy.BestofN(module=extractor, reward_fn=json_reward, N=5, threshold=1.0)
+best_extractor = dspy.BestOfN(module=extractor, reward_fn=json_reward, N=5, threshold=1.0)
 
 result = best_extractor(text="John Doe, 30 years old, john@example.com")
 print(result.output)  # Best valid JSON
@@ -221,13 +221,13 @@ refined = dspy.Refine(module=module, reward_fn=reward, N=3, threshold=1.0)
 1. **Score gradually** - Use 0.0-1.0 range, not binary pass/fail
 2. **Multiple constraints** - Weight each constraint (e.g., 25% each for 4 checks)
 3. **Handle exceptions** - Reward functions should never raise, return 0.0 on error
-4. **Limit attempts** - 3-5 attempts for Refine, 5-10 for BestofN
+4. **Limit attempts** - 3-5 attempts for Refine, 5-10 for BestOfN
 5. **Log failures** - Track which constraints fail most often
 
 ## Limitations
 
 - Each attempt costs an additional LLM call
 - Reward functions don't receive feedback prompts (unlike GEPA)
-- BestofN is expensive (N × cost)
+- BestOfN is expensive (N × cost)
 - No automatic constraint learning (manual reward design)
 - Refine may not improve if base module is fundamentally wrong

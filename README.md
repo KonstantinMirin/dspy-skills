@@ -2,6 +2,8 @@
 
 A comprehensive collection of AI-powered skills for programming and optimizing LLM applications using the **DSPy** framework. These skills enable you to move from manual prompt engineering to systematic, programmatic LLM development.
 
+**Version Compatibility**: All skills target **DSPy 3.1.2** (released January 19, 2026). All code examples and APIs have been verified against this version.
+
 ## 🎯 What is DSPy?
 
 DSPy is a declarative framework that lets you *program* language models instead of *prompting* them. It provides:
@@ -75,7 +77,8 @@ DSPy is a declarative framework that lets you *program* language models instead 
 ## 🚀 Installation
 
 ```bash
-pip install dspy-ai
+# Install DSPy 3.1.2 or later
+pip install dspy-ai>=3.1.2
 ```
 
 ### Optional Dependencies

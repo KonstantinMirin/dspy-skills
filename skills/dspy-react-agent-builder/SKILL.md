@@ -170,11 +170,12 @@ ReAct agents benefit from reflective optimization:
 ```python
 from dspy.evaluate import Evaluate
 
-def feedback_metric(example, pred, trace=None):
+def feedback_metric(example, pred, trace=None, pred_name=None, pred_trace=None):
     """Provide textual feedback for GEPA."""
     is_correct = example.answer.lower() in pred.answer.lower()
+    score = 1.0 if is_correct else 0.0
     feedback = "Correct." if is_correct else f"Expected '{example.answer}'. Check tool selection."
-    return (1.0 if is_correct else 0.0), feedback
+    return dspy.Prediction(score=score, feedback=feedback)
 
 # Optimize agent
 optimizer = dspy.GEPA(
