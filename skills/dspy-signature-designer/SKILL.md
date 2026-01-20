@@ -1,6 +1,8 @@
 ---
 name: dspy-signature-designer
-description: Design type-safe DSPy signatures with InputField, OutputField, and advanced type hints
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "create a DSPy signature", "define inputs and outputs", "design a signature", "use InputField or OutputField", "add type hints to DSPy", mentions "signature class", "type-safe DSPy", "Pydantic models in DSPy", or needs to define what a DSPy module should do with structured inputs and outputs.
 allowed-tools:
   - Read
   - Write

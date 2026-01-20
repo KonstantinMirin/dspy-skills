@@ -1,6 +1,8 @@
 ---
 name: dspy-bootstrap-fewshot
-description: Auto-generate high-quality few-shot examples using teacher models in DSPy
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "bootstrap few-shot examples", "generate demonstrations", "use BootstrapFewShot", "optimize with limited data", "create training demos automatically", mentions "teacher model for few-shot", "10-50 training examples", or wants automatic demonstration generation for a DSPy program without extensive compute.
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,12 @@ Automatically generate and select optimal few-shot demonstrations for your DSPy 
 - Manual example selection is tedious or suboptimal
 - You want demonstrations with reasoning traces
 - Quick optimization without extensive compute
+
+## Related Skills
+
+- For more data (200+ examples): [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md)
+- For agentic systems: [dspy-gepa-reflective](../dspy-gepa-reflective/SKILL.md)
+- Measure improvements: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
 
 ## Inputs
 

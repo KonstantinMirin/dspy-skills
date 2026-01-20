@@ -1,6 +1,8 @@
 ---
 name: dspy-miprov2-optimizer
-description: State-of-the-art Bayesian optimization for DSPy programs with joint instruction and demo tuning
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "optimize a DSPy program", "use MIPROv2", "tune instructions and demos", "get best DSPy performance", "run Bayesian optimization", mentions "state-of-the-art DSPy optimizer", "joint instruction tuning", or needs maximum performance from a DSPy program with substantial training data (200+ examples).
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,12 @@ Jointly optimize instructions and few-shot demonstrations using Bayesian Optimiz
 - You can afford longer optimization runs (40+ trials)
 - You need state-of-the-art performance
 - Both instructions and demos need tuning
+
+## Related Skills
+
+- For limited data (10-50 examples): [dspy-bootstrap-fewshot](../dspy-bootstrap-fewshot/SKILL.md)
+- For agentic systems: [dspy-gepa-reflective](../dspy-gepa-reflective/SKILL.md)
+- Measure improvements: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
 
 ## Inputs
 

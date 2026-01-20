@@ -1,6 +1,8 @@
 ---
 name: dspy-finetune-bootstrap
-description: Fine-tune LLM weights using DSPy's BootstrapFinetune optimizer
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "fine-tune a DSPy model", "distill a program into weights", "use BootstrapFinetune", "create a student model", "reduce inference costs with fine-tuning", mentions "model distillation", "teacher-student training", or wants to deploy a DSPy program as fine-tuned weights for production efficiency.
 allowed-tools:
   - Read
   - Write

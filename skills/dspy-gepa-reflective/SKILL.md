@@ -1,6 +1,8 @@
 ---
 name: dspy-gepa-reflective
-description: Newest DSPy optimizer using LLM reflection on execution trajectories for agentic systems
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "optimize an agent with GEPA", "use reflective optimization", "optimize ReAct agents", "provide feedback metrics", mentions "GEPA optimizer", "LLM reflection", "execution trajectories", "agentic systems optimization", or needs to optimize complex multi-step agents using textual feedback on execution traces.
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,11 @@ Optimize complex agentic systems using LLM reflection on full execution traces w
 - When you have **rich textual feedback** on failures
 - Complex multi-step workflows
 - Instruction-only optimization needed
+
+## Related Skills
+
+- For non-agentic programs: [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md), [dspy-bootstrap-fewshot](../dspy-bootstrap-fewshot/SKILL.md)
+- Measure improvements: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
 
 ## Inputs
 

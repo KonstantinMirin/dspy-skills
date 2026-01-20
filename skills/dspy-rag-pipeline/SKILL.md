@@ -1,6 +1,8 @@
 ---
 name: dspy-rag-pipeline
-description: Build and optimize RAG pipelines with ColBERTv2 retrieval in DSPy
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "build a RAG pipeline", "create retrieval augmented generation", "use ColBERTv2 in DSPy", "set up a retriever in DSPy", mentions "RAG with DSPy", "context retrieval", "multi-hop RAG", or needs to build a DSPy system that retrieves external knowledge to answer questions with grounded, factual responses.
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,12 @@ Build retrieval-augmented generation pipelines with ColBERTv2 that can be system
 - You have a document corpus to search
 - Need grounded, factual responses
 - Want to optimize retrieval + generation jointly
+
+## Related Skills
+
+- Optimize this pipeline: [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md), [dspy-bootstrap-fewshot](../dspy-bootstrap-fewshot/SKILL.md)
+- Evaluate results: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
+- Design signatures: [dspy-signature-designer](../dspy-signature-designer/SKILL.md)
 
 ## Inputs
 

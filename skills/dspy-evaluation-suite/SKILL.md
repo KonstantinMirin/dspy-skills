@@ -1,6 +1,8 @@
 ---
 name: dspy-evaluation-suite
-description: Comprehensive evaluation metrics and testing framework for DSPy programs
+version: "1.0.0"
+dspy-compatibility: "2.5+"
+description: This skill should be used when the user asks to "evaluate a DSPy program", "test my DSPy module", "measure performance", "create evaluation metrics", "use answer_exact_match or SemanticF1", mentions "Evaluate class", "comparing programs", "establishing baselines", or needs to systematically test and measure DSPy program quality with custom or built-in metrics.
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,11 @@ Systematically evaluate DSPy programs using built-in and custom metrics with par
 - Comparing different program variants
 - Establishing baselines
 - Validating production readiness
+
+## Related Skills
+
+- Use with any optimizer: [dspy-bootstrap-fewshot](../dspy-bootstrap-fewshot/SKILL.md), [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md), [dspy-gepa-reflective](../dspy-gepa-reflective/SKILL.md)
+- Evaluate RAG pipelines: [dspy-rag-pipeline](../dspy-rag-pipeline/SKILL.md)
 
 ## Inputs
 
