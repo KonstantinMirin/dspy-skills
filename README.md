@@ -27,6 +27,23 @@ DSPy is a declarative framework that lets you *program* language models instead 
 | [dspy-evaluation-suite](skills/dspy-evaluation-suite/SKILL.md) | Metrics and evaluation | Quality assessment |
 | [dspy-haystack-integration](skills/dspy-haystack-integration/SKILL.md) | DSPy + Haystack pipelines | Existing Haystack projects |
 
+## 🎯 Choosing the Right Optimizer
+
+| Your Situation | Recommended Skill | Why |
+|----------------|-------------------|-----|
+| 10-50 labeled examples | [dspy-bootstrap-fewshot](skills/dspy-bootstrap-fewshot/SKILL.md) | Fast, cost-effective |
+| 200+ examples, need best performance | [dspy-miprov2-optimizer](skills/dspy-miprov2-optimizer/SKILL.md) | State-of-the-art results |
+| Building agents with tools | [dspy-gepa-reflective](skills/dspy-gepa-reflective/SKILL.md) | Optimizes execution traces |
+| Production deployment, cost reduction | [dspy-finetune-bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) | Creates efficient fine-tuned models |
+
+## 🔄 Typical Workflow
+
+1. **Design** → [Signature Designer](skills/dspy-signature-designer/SKILL.md) - Define inputs/outputs
+2. **Build** → [RAG Pipeline](skills/dspy-rag-pipeline/SKILL.md) - Create your DSPy program
+3. **Optimize** → Choose optimizer based on your data
+4. **Evaluate** → [Evaluation Suite](skills/dspy-evaluation-suite/SKILL.md) - Measure improvements
+5. **Deploy** → [Fine-tune Bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) - Optional production optimization
+
 ## 📖 Documentation
 
 - [DSPy Framework Guide](docs/dspy-framework.md) - Complete framework reference
@@ -68,6 +85,14 @@ print(result.sentiment)  # True
 
 See [examples/code-snippets.py](examples/code-snippets.py) for production-ready code.
 
----
+## 🤝 Contributing
 
-*Built for the SkillsMP marketplace*
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+Built for the [SkillsMP marketplace](https://github.com/skills-mp). Uses the [DSPy framework](https://dspy.ai/) by Stanford NLP.
