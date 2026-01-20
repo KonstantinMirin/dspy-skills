@@ -9,42 +9,42 @@
     {
       "name": "dspy-rag-pipeline",
       "source": "skills/dspy-rag-pipeline",
-      "description": "Build and optimize RAG pipelines with ColBERTv2 retrieval in DSPy"
+      "description": "Build RAG pipelines with retrieval-augmented generation using ColBERTv2 and DSPy optimization"
     },
     {
       "name": "dspy-bootstrap-fewshot",
       "source": "skills/dspy-bootstrap-fewshot",
-      "description": "Bootstrap few-shot examples for DSPy prompt optimization"
+      "description": "Auto-generate few-shot demonstrations using teacher models for quick DSPy optimization with 10-50 examples"
     },
     {
       "name": "dspy-evaluation-suite",
       "source": "skills/dspy-evaluation-suite",
-      "description": "Comprehensive evaluation framework for DSPy programs"
+      "description": "Test and measure DSPy program quality with built-in and custom evaluation metrics"
     },
     {
       "name": "dspy-finetune-bootstrap",
       "source": "skills/dspy-finetune-bootstrap",
-      "description": "Fine-tune language models using bootstrapped DSPy examples"
+      "description": "Distill DSPy programs into fine-tuned model weights for production deployment and cost reduction"
     },
     {
       "name": "dspy-gepa-reflective",
       "source": "skills/dspy-gepa-reflective",
-      "description": "Generalized Error-driven Prompt Adaptation with reflection"
+      "description": "Optimize complex agents and agentic systems using LLM reflection on execution trajectories"
     },
     {
       "name": "dspy-haystack-integration",
       "source": "skills/dspy-haystack-integration",
-      "description": "Integrate DSPy with Haystack for advanced NLP pipelines"
+      "description": "Integrate DSPy optimization into existing Haystack pipelines for automatic prompt improvement"
     },
     {
       "name": "dspy-miprov2-optimizer",
       "source": "skills/dspy-miprov2-optimizer",
-      "description": "MIPROv2 optimizer for automatic prompt engineering"
+      "description": "State-of-the-art Bayesian optimization for DSPy programs with 200+ examples using joint instruction and demo tuning"
     },
     {
       "name": "dspy-signature-designer",
       "source": "skills/dspy-signature-designer",
-      "description": "Design and optimize DSPy signatures for language model programs"
+      "description": "Design type-safe input/output specifications for DSPy modules with Pydantic support and advanced type hints"
     }
   ]
 }
