@@ -17,6 +17,7 @@ DSPy is a declarative framework that lets you *program* language models instead 
 | [dspy-bootstrap-fewshot](skills/dspy-bootstrap-fewshot/SKILL.md) | Auto-generate few-shot examples | Quick optimization with ~10 examples |
 | [dspy-miprov2-optimizer](skills/dspy-miprov2-optimizer/SKILL.md) | Bayesian instruction+demo optimization | 200+ examples, comprehensive tuning |
 | [dspy-gepa-reflective](skills/dspy-gepa-reflective/SKILL.md) | LLM reflection on execution traces | Agentic systems, complex workflows |
+| [dspy-simba-optimizer](skills/dspy-simba-optimizer/SKILL.md) | Mini-batch Bayesian optimization | Custom feedback, budget-friendly |
 | [dspy-finetune-bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) | Fine-tune model weights | Production deployment, efficiency |
 
 ### Pipelines & Components
@@ -26,6 +27,27 @@ DSPy is a declarative framework that lets you *program* language models instead 
 | [dspy-signature-designer](skills/dspy-signature-designer/SKILL.md) | Design type-safe I/O specs | Clean, validated outputs |
 | [dspy-evaluation-suite](skills/dspy-evaluation-suite/SKILL.md) | Metrics and evaluation | Quality assessment |
 | [dspy-haystack-integration](skills/dspy-haystack-integration/SKILL.md) | DSPy + Haystack pipelines | Existing Haystack projects |
+
+### Agent Development
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-react-agent-builder](skills/dspy-react-agent-builder/SKILL.md) | Build ReAct agents with tools | Multi-step reasoning tasks |
+
+### Output Validation
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-output-refinement-constraints](skills/dspy-output-refinement-constraints/SKILL.md) | Refine outputs with constraints | Format/content validation |
+
+### Advanced Patterns
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-advanced-module-composition](skills/dspy-advanced-module-composition/SKILL.md) | Ensemble and multi-chain patterns | Complex multi-module programs |
+| [dspy-custom-module-design](skills/dspy-custom-module-design/SKILL.md) | Build custom DSPy modules | Reusable production components |
+
+### Debugging & Monitoring
+| Skill | Description | Best For |
+|-------|-------------|----------|
+| [dspy-debugging-observability](skills/dspy-debugging-observability/SKILL.md) | MLflow tracing and monitoring | Production debugging, cost tracking |
 
 ## 🎯 Choosing the Right Optimizer
 
@@ -39,10 +61,12 @@ DSPy is a declarative framework that lets you *program* language models instead 
 ## 🔄 Typical Workflow
 
 1. **Design** → [Signature Designer](skills/dspy-signature-designer/SKILL.md) - Define inputs/outputs
-2. **Build** → [RAG Pipeline](skills/dspy-rag-pipeline/SKILL.md) - Create your DSPy program
-3. **Optimize** → Choose optimizer based on your data
-4. **Evaluate** → [Evaluation Suite](skills/dspy-evaluation-suite/SKILL.md) - Measure improvements
-5. **Deploy** → [Fine-tune Bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) - Optional production optimization
+2. **Build** → [RAG Pipeline](skills/dspy-rag-pipeline/SKILL.md) or [Agent Builder](skills/dspy-react-agent-builder/SKILL.md) - Create your DSPy program
+3. **Validate** → [Output Refinement](skills/dspy-output-refinement-constraints/SKILL.md) - Add constraints
+4. **Optimize** → Choose optimizer based on your data
+5. **Evaluate** → [Evaluation Suite](skills/dspy-evaluation-suite/SKILL.md) - Measure improvements
+6. **Debug** → [Debugging & Observability](skills/dspy-debugging-observability/SKILL.md) - Monitor performance
+7. **Deploy** → [Fine-tune Bootstrap](skills/dspy-finetune-bootstrap/SKILL.md) - Optional production optimization
 
 ## 📖 Documentation
 

@@ -45,6 +45,36 @@
       "name": "dspy-signature-designer",
       "source": "skills/dspy-signature-designer",
       "description": "Design type-safe input/output specifications for DSPy modules with Pydantic support and advanced type hints"
+    },
+    {
+      "name": "dspy-react-agent-builder",
+      "source": "skills/dspy-react-agent-builder",
+      "description": "Build production ReAct agents with tool integration, GEPA optimization, and error handling for multi-step reasoning tasks"
+    },
+    {
+      "name": "dspy-debugging-observability",
+      "source": "skills/dspy-debugging-observability",
+      "description": "Debug and monitor DSPy programs with MLflow tracing, custom callbacks, and production cost/latency tracking"
+    },
+    {
+      "name": "dspy-output-refinement-constraints",
+      "source": "skills/dspy-output-refinement-constraints",
+      "description": "Improve output quality with iterative refinement and constraint validation using dspy.Refine and dspy.BestofN"
+    },
+    {
+      "name": "dspy-simba-optimizer",
+      "source": "skills/dspy-simba-optimizer",
+      "description": "Alternative Bayesian optimizer with mini-batch statistical optimization for custom feedback scenarios and agentic tasks"
+    },
+    {
+      "name": "dspy-advanced-module-composition",
+      "source": "skills/dspy-advanced-module-composition",
+      "description": "Compose complex pipelines with ensemble voting, multi-chain comparison, and sequential/parallel module patterns"
+    },
+    {
+      "name": "dspy-custom-module-design",
+      "source": "skills/dspy-custom-module-design",
+      "description": "Design production-quality custom DSPy modules with proper architecture, state management, and serialization patterns"
     }
   ]
 }
