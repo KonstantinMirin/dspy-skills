@@ -1,7 +1,7 @@
 ---
 name: dspy-custom-module-design
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "create custom DSPy module", "design a DSPy module", "extend dspy.Module", "build reusable DSPy component", mentions "custom module patterns", "module serialization", "stateful modules", "module testing", or needs to design production-quality custom DSPy modules with proper architecture, state management, and testing.
 allowed-tools:
   - Read
@@ -153,10 +153,17 @@ Modules support save/load:
 ```python
 import dspy
 
+# Save module state
 module = MyCustomModule()
 module.save("my_module.json")
 
-loaded = MyCustomModule.load("my_module.json")
+# Load requires creating instance first, then loading state
+loaded = MyCustomModule()
+loaded.load("my_module.json")
+
+# For loading entire programs (dspy>=2.6.0)
+module.save("./my_module/", save_program=True)
+loaded = dspy.load("./my_module/")
 ```
 
 ## Production Example

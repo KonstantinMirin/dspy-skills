@@ -1,7 +1,7 @@
 ---
 name: dspy-haystack-integration
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "integrate DSPy with Haystack", "optimize Haystack prompts using DSPy", "use DSPy to improve Haystack pipeline", mentions "Haystack pipeline optimization", "combining DSPy and Haystack", "extract DSPy prompt for Haystack", or wants to use DSPy's optimization capabilities to automatically improve prompts in existing Haystack pipelines.
 allowed-tools:
   - Read
@@ -64,7 +64,7 @@ Answer:
 pipeline = Pipeline()
 pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=doc_store))
 pipeline.add_component("prompt_builder", PromptBuilder(template=initial_prompt))
-pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
+pipeline.add_component("generator", OpenAIGenerator(model="gpt-4o-mini"))
 
 pipeline.connect("retriever", "prompt_builder.context")
 pipeline.connect("prompt_builder", "generator")
@@ -124,7 +124,8 @@ def mixed_metric(example, pred, trace=None):
 ```python
 from dspy.teleprompt import BootstrapFewShot
 
-dspy.configure(lm=dspy.LM("openai/gpt-3.5-turbo"))
+lm = dspy.LM("openai/gpt-4o-mini")
+dspy.configure(lm=lm)
 
 # Create DSPy module with Haystack retriever
 rag_module = HaystackRAG(retriever=pipeline.get_component("retriever"))

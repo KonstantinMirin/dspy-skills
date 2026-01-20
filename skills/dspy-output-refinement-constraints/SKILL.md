@@ -1,7 +1,7 @@
 ---
 name: dspy-output-refinement-constraints
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "refine DSPy outputs", "enforce constraints", "use dspy.Refine", "select best output", "use dspy.BestofN", mentions "output validation", "constraint checking", "multi-attempt generation", "reward function", or needs to improve output quality through iterative refinement or best-of-N selection with custom constraints.
 allowed-tools:
   - Read
@@ -34,9 +34,10 @@ Improve output quality using iterative refinement (dspy.Refine) and best-of-N se
 
 | Input | Type | Description |
 |-------|------|-------------|
-| `base_module` | `dspy.Module` | Module to refine |
+| `module` | `dspy.Module` | Module to refine |
 | `reward_fn` | `callable` | Constraint validation function |
-| `n` | `int` | Number of attempts (BestofN) |
+| `N` | `int` | Number of attempts |
+| `threshold` | `float` | Minimum reward to accept |
 
 ## Outputs
 
@@ -59,8 +60,8 @@ dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 summarizer = dspy.ChainOfThought("document -> summary: str")
 
 # Reward function: checks constraints
-def summary_reward(example, prediction, trace=None):
-    summary = prediction.summary
+def summary_reward(args, pred):
+    summary = pred.summary
     word_count = len(summary.split())
 
     if word_count > 100 or len(summary) < 50:
@@ -72,8 +73,9 @@ def summary_reward(example, prediction, trace=None):
 # Refine module
 refined_summarizer = dspy.Refine(
     module=summarizer,
-    reward=summary_reward,
-    max_attempts=3
+    reward_fn=summary_reward,
+    N=3,
+    threshold=1.0
 )
 
 # Use it
@@ -88,11 +90,11 @@ Generate N outputs and pick the best:
 ```python
 import dspy
 
-def json_reward(example, prediction, trace=None):
+def json_reward(args, pred):
     """Validate JSON format and fields."""
     import json
     try:
-        data = json.loads(prediction.output)
+        data = json.loads(pred.output)
         if not {'name', 'age', 'email'}.issubset(data.keys()):
             return 0.3
         if '@' not in data.get('email', ''):
@@ -103,7 +105,7 @@ def json_reward(example, prediction, trace=None):
 
 # BestofN: try 5 times, pick best
 extractor = dspy.Predict("text -> output: str")
-best_extractor = dspy.BestofN(module=extractor, reward=json_reward, n=5)
+best_extractor = dspy.BestofN(module=extractor, reward_fn=json_reward, N=5, threshold=1.0)
 
 result = best_extractor(text="John Doe, 30 years old, john@example.com")
 print(result.output)  # Best valid JSON
@@ -117,9 +119,9 @@ Complex validation with scoring:
 import dspy
 import re
 
-def comprehensive_reward(example, prediction, trace=None):
+def comprehensive_reward(args, pred):
     """Validate format, length, and content."""
-    text = prediction.answer
+    text = pred.answer
     score = 0.0
 
     # Length: 50-150 words (33%)
@@ -139,7 +141,7 @@ def comprehensive_reward(example, prediction, trace=None):
 
 # Use with Refine
 qa = dspy.ChainOfThought("question -> answer: str")
-refined_qa = dspy.Refine(qa, reward=comprehensive_reward, max_attempts=4)
+refined_qa = dspy.Refine(module=qa, reward_fn=comprehensive_reward, N=4, threshold=0.9)
 
 result = refined_qa(question="What is data science?")
 ```
@@ -162,14 +164,15 @@ class StructuredExtractor(dspy.Module):
         )
         self.refined = dspy.Refine(
             module=self.extractor,
-            reward=self.validation_reward,
-            max_attempts=3
+            reward_fn=self.validation_reward,
+            N=3,
+            threshold=0.9
         )
 
-    def validation_reward(self, example, prediction, trace=None):
+    def validation_reward(self, args, pred):
         """Validate JSON structure and business logic."""
         try:
-            data = json.loads(prediction.json_output)
+            data = json.loads(pred.json_output)
             score = 0.0
 
             # Required fields
@@ -202,15 +205,15 @@ print(result.json_output)
 
 ## Migration from Assert/Suggest
 
-DSPy 2.5+ deprecates `dspy.Assert`/`dspy.Suggest`. Use Refine with reward functions:
+DSPy 2.6+ deprecates `dspy.Assert`/`dspy.Suggest`. Use Refine with reward functions:
 
 ```python
 # Old: dspy.Assert(len(output) < 100, "Too long")
 # New:
-def reward(ex, pred, trace=None):
+def reward(args, pred):
     return 1.0 if len(pred.output) < 100 else 0.0
 
-refined = dspy.Refine(module, reward=reward, max_attempts=3)
+refined = dspy.Refine(module=module, reward_fn=reward, N=3, threshold=1.0)
 ```
 
 ## Best Practices

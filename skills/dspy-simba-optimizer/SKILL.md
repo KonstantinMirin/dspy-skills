@@ -1,7 +1,7 @@
 ---
 name: dspy-simba-optimizer
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "optimize with SIMBA", "use Bayesian optimization", "optimize agents with custom feedback", mentions "SIMBA optimizer", "mini-batch optimization", "statistical optimization", "lightweight optimizer", or needs an alternative to MIPROv2/GEPA for programs with rich feedback signals.
 allowed-tools:
   - Read
@@ -36,8 +36,9 @@ Optimize DSPy programs using mini-batch Bayesian optimization with statistical a
 |-------|------|-------------|
 | `program` | `dspy.Module` | Program to optimize |
 | `trainset` | `list[dspy.Example]` | Training examples |
-| `metric` | `callable` | Returns score (0-1) or (score, feedback) |
-| `num_batches` | `int` | Mini-batches for optimization |
+| `metric` | `callable` | Returns float or `dspy.Prediction(score=..., feedback=...)` |
+| `max_steps` | `int` | Number of optimization steps |
+| `bsize` | `int` | Mini-batch size |
 
 ## Outputs
 
@@ -49,8 +50,10 @@ Optimize DSPy programs using mini-batch Bayesian optimization with statistical a
 
 ### Phase 1: Understand SIMBA
 
-**SIMBA** (Statistical Inference-based Mini-Batch Adaptation):
-- Bayesian optimization with mini-batch sampling
+**SIMBA** (Stochastic Introspective Mini-Batch Ascent):
+- Iterative prompt optimization with mini-batch sampling
+- Identifies challenging examples with high output variability
+- Generates self-reflective rules or adds successful demonstrations
 - Lighter than GEPA (no reflection LM)
 - More flexible than Bootstrap (uses feedback)
 
@@ -83,8 +86,8 @@ def qa_metric(example, pred, trace=None):
 # SIMBA optimizer
 optimizer = dspy.SIMBA(
     metric=qa_metric,
-    num_batches=10,  # Statistical mini-batches
-    batch_size=5
+    max_steps=10,  # Optimization iterations
+    bsize=5  # Mini-batch size
 )
 
 program = QAPipeline()
@@ -105,20 +108,19 @@ def detailed_metric(example, pred, trace=None):
     actual = pred.answer.lower()
 
     if expected == actual:
-        return 1.0, "Perfect match"
+        return dspy.Prediction(score=1.0, feedback="Perfect match")
     elif expected in actual:
-        return 0.7, f"Contains answer but verbose: '{actual}'"
+        return dspy.Prediction(score=0.7, feedback=f"Contains answer but verbose: '{actual}'")
     else:
         overlap = len(set(expected.split()) & set(actual.split()))
         if overlap > 0:
-            return 0.3, f"Partial overlap: {overlap} words"
-        return 0.0, f"No match. Expected '{expected}'"
+            return dspy.Prediction(score=0.3, feedback=f"Partial overlap: {overlap} words")
+        return dspy.Prediction(score=0.0, feedback=f"No match. Expected '{expected}'")
 
 optimizer = dspy.SIMBA(
     metric=detailed_metric,
-    num_batches=12,
-    batch_size=8,
-    max_iterations=20  # Bayesian search iterations
+    max_steps=20,  # Optimization iterations
+    bsize=8  # Mini-batch size
 )
 
 compiled = optimizer.compile(program, trainset=trainset)
@@ -133,24 +135,27 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Define tools as functions
+def search(query: str) -> str:
+    """Search knowledge base for relevant information."""
+    retriever = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
+    results = retriever(query, k=3)
+    return "\n".join([r['text'] for r in results])
+
+def calculate(expr: str) -> str:
+    """Evaluate Python expressions safely."""
+    try:
+        with dspy.PythonInterpreter() as interp:
+            return str(interp.execute(expr))
+    except Exception as e:
+        return f"Error: {e}"
+
 class ResearchAgent(dspy.Module):
     def __init__(self):
         self.agent = dspy.ReAct(
             "question -> answer",
-            tools=[self.search, self.calculate]
+            tools=[search, calculate]
         )
-
-    def search(self, query: str) -> list[str]:
-        """Search knowledge base."""
-        retriever = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
-        return [r['text'] for r in retriever(query, k=3)]
-
-    def calculate(self, expr: str) -> str:
-        """Evaluate math expressions."""
-        try:
-            return str(dspy.PythonInterpreter({}).execute(expr))
-        except Exception as e:
-            return f"Error: {e}"
 
     def forward(self, question):
         return self.agent(question=question)
@@ -162,11 +167,11 @@ def agent_metric(example, pred, trace=None):
 
     # Exact match
     if expected == actual:
-        return 1.0, "Correct answer"
+        return dspy.Prediction(score=1.0, feedback="Correct answer")
 
     # Partial match
     if expected in actual:
-        return 0.7, "Answer contains expected result"
+        return dspy.Prediction(score=0.7, feedback="Answer contains expected result")
 
     # Check key terms
     expected_terms = set(expected.split())
@@ -174,9 +179,9 @@ def agent_metric(example, pred, trace=None):
     overlap = len(expected_terms & actual_terms)
 
     if overlap >= len(expected_terms) * 0.5:
-        return 0.5, f"50%+ term overlap"
+        return dspy.Prediction(score=0.5, feedback=f"50%+ term overlap")
 
-    return 0.0, f"Incorrect: expected '{example.answer}'"
+    return dspy.Prediction(score=0.0, feedback=f"Incorrect: expected '{example.answer}'")
 
 def optimize_agent(trainset, devset):
     """Full SIMBA optimization pipeline."""
@@ -185,17 +190,16 @@ def optimize_agent(trainset, devset):
     agent = ResearchAgent()
 
     # Baseline evaluation
-    eval_metric = lambda ex, pred, trace: agent_metric(ex, pred, trace)[0]
-    evaluator = Evaluate(devset=devset, metric=eval_metric, num_threads=4)
+    eval_metric = lambda ex, pred, trace: agent_metric(ex, pred, trace).score
+    evaluator = dspy.Evaluate(devset=devset, metric=eval_metric, num_threads=4)
     baseline = evaluator(agent)
     logger.info(f"Baseline: {baseline:.2%}")
 
     # SIMBA optimization
     optimizer = dspy.SIMBA(
         metric=agent_metric,
-        num_batches=15,
-        batch_size=6,
-        max_iterations=25
+        max_steps=25,  # Optimization iterations
+        bsize=6  # Mini-batch size
     )
 
     compiled = optimizer.compile(agent, trainset=trainset)
@@ -213,19 +217,22 @@ def optimize_agent(trainset, devset):
 ```python
 optimizer = dspy.SIMBA(
     metric=metric_fn,
-    num_batches=10,        # More = better statistics
-    batch_size=5,          # Samples per batch
-    max_iterations=20,     # Search depth
-    temperature=1.0       # Exploration vs exploitation
+    max_steps=20,                          # Optimization iterations
+    bsize=32,                              # Mini-batch size (default: 32)
+    num_candidates=6,                      # Candidates per iteration (default: 6)
+    max_demos=4,                           # Max demos per predictor (default: 4)
+    temperature_for_sampling=0.2,          # Sampling temperature (default: 0.2)
+    temperature_for_candidates=0.2         # Candidate selection temperature (default: 0.2)
 )
 ```
 
 ## Best Practices
 
-1. **Use feedback signals** - SIMBA benefits from (score, feedback) tuples
-2. **Balance batch size** - 5-10 samples per batch, 10-20 batches
+1. **Use feedback signals** - SIMBA benefits from `dspy.Prediction(score=..., feedback=...)` objects
+2. **Balance parameters** - Adjust `bsize` (default 32) and `max_steps` (default 8) based on dataset size
 3. **Patience** - SIMBA is slower than Bootstrap, faster than GEPA
 4. **Custom metrics** - Best for scenarios with nuanced scoring (not binary)
+5. **Tune temperatures** - Lower temperatures (0.1-0.3) for exploitation, higher (0.5-1.0) for exploration
 
 ## Limitations
 

@@ -1,7 +1,7 @@
 ---
 name: dspy-react-agent-builder
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "create a ReAct agent", "build an agent with tools", "implement tool-calling agent", "use dspy.ReAct", mentions "agent with tools", "reasoning and acting", "multi-step agent", "agent optimization with GEPA", or needs to build production agents that use tools to solve complex tasks.
 allowed-tools:
   - Read
@@ -35,7 +35,7 @@ Build production-quality ReAct agents that use tools to solve complex multi-step
 |-------|------|-------------|
 | `signature` | `str` | Task signature (e.g., "question -> answer") |
 | `tools` | `list[callable]` | Available tools/functions |
-| `max_iters` | `int` | Max reasoning steps (default: 5) |
+| `max_iters` | `int` | Max reasoning steps (default: 20) |
 
 ## Outputs
 
@@ -75,7 +75,8 @@ def calculate(expression: str) -> float:
         Numerical result
     """
     try:
-        return dspy.PythonInterpreter({}).execute(expression)
+        interpreter = dspy.PythonInterpreter()
+        return interpreter.execute(expression)
     except Exception as e:
         return f"Error: {e}"
 ```
@@ -132,7 +133,8 @@ class ResearchAgent(dspy.Module):
     def calculate(self, expression: str) -> str:
         """Evaluate mathematical expressions safely."""
         try:
-            result = dspy.PythonInterpreter({}).execute(expression)
+            interpreter = dspy.PythonInterpreter()
+            result = interpreter.execute(expression)
             return str(result)
         except Exception as e:
             logger.error(f"Calculation failed: {e}")
@@ -183,7 +185,7 @@ optimizer = dspy.GEPA(
 )
 
 compiled = optimizer.compile(agent, trainset=trainset)
-compiled.save("research_agent_optimized.json")
+compiled.save("research_agent_optimized.json", save_program=False)
 ```
 
 ## Best Practices
@@ -192,7 +194,7 @@ compiled.save("research_agent_optimized.json")
 2. **Error handling** - All tools should handle failures gracefully and return error messages
 3. **Tool independence** - Test each tool separately before adding to agent
 4. **Logging** - Track tool calls and agent reasoning for debugging
-5. **Limit iterations** - Set reasonable `max_iters` to prevent infinite loops (5-10 is typical)
+5. **Limit iterations** - Set reasonable `max_iters` to prevent infinite loops (default is 20, but 5-10 often sufficient for simpler tasks)
 
 ## Limitations
 

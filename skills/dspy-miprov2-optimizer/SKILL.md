@@ -1,7 +1,7 @@
 ---
 name: dspy-miprov2-optimizer
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "optimize a DSPy program", "use MIPROv2", "tune instructions and demos", "get best DSPy performance", "run Bayesian optimization", mentions "state-of-the-art DSPy optimizer", "joint instruction tuning", or needs maximum performance from a DSPy program with substantial training data (200+ examples).
 allowed-tools:
   - Read
@@ -57,8 +57,10 @@ Jointly optimize instructions and few-shot demonstrations using Bayesian Optimiz
 
 ```python
 import dspy
+from dspy.teleprompt import MIPROv2
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+lm = dspy.LM('openai/gpt-4o-mini')
+dspy.configure(lm=lm)
 ```
 
 ### Phase 2: Define Program
@@ -77,7 +79,9 @@ class RAGAgent(dspy.Module):
 ### Phase 3: Optimize
 
 ```python
-optimizer = dspy.MIPROv2(
+from dspy.teleprompt import MIPROv2
+
+optimizer = MIPROv2(
     metric=dspy.evaluate.answer_exact_match,
     auto="medium",  # Balanced optimization
     num_threads=24
@@ -98,6 +102,7 @@ compiled = optimizer.compile(RAGAgent(), trainset=trainset)
 
 ```python
 import dspy
+from dspy.teleprompt import MIPROv2
 from dspy.evaluate import Evaluate
 import json
 import logging
@@ -114,7 +119,7 @@ class ReActAgent(dspy.Module):
 def search_tool(query: str) -> list[str]:
     """Search knowledge base."""
     results = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')(query, k=3)
-    return [r['text'] for r in results]
+    return [r['long_text'] for r in results]
 
 def optimize_agent(trainset, devset):
     """Full MIPROv2 optimization pipeline."""
@@ -131,7 +136,7 @@ def optimize_agent(trainset, devset):
     logger.info(f"Baseline: {baseline:.2%}")
     
     # MIPROv2 optimization
-    optimizer = dspy.MIPROv2(
+    optimizer = MIPROv2(
         metric=dspy.evaluate.answer_exact_match,
         auto="medium",
         num_threads=24,
@@ -165,8 +170,10 @@ def optimize_agent(trainset, devset):
 ## Instruction-Only Mode
 
 ```python
+from dspy.teleprompt import MIPROv2
+
 # Disable demos for pure instruction optimization
-optimizer = dspy.MIPROv2(
+optimizer = MIPROv2(
     metric=metric,
     auto="medium",
     max_bootstrapped_demos=0,

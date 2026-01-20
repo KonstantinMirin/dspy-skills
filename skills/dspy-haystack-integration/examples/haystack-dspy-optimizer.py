@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 class HaystackDSPyOptimizer:
     """Optimize Haystack pipelines using DSPy."""
 
-    def __init__(self, document_store, lm_model="openai/gpt-3.5-turbo"):
+    def __init__(self, document_store, lm_model="openai/gpt-4o-mini"):
         self.doc_store = document_store
         self.retriever = InMemoryBM25Retriever(document_store=document_store)
-        dspy.configure(lm=dspy.LM(lm_model))
+        lm = dspy.LM(lm_model)
+        dspy.configure(lm=lm)
 
     def create_dspy_module(self, k=3):
         """Create DSPy module wrapping Haystack retriever."""
@@ -92,7 +93,7 @@ class HaystackDSPyOptimizer:
         pipeline = Pipeline()
         pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=self.doc_store))
         pipeline.add_component("prompt_builder", PromptBuilder(template=optimized_prompt))
-        pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
+        pipeline.add_component("generator", OpenAIGenerator(model="gpt-4o-mini"))
 
         pipeline.connect("retriever", "prompt_builder.context")
         pipeline.connect("prompt_builder", "generator")

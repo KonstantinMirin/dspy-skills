@@ -1,7 +1,7 @@
 ---
 name: dspy-evaluation-suite
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "evaluate a DSPy program", "test my DSPy module", "measure performance", "create evaluation metrics", "use answer_exact_match or SemanticF1", mentions "Evaluate class", "comparing programs", "establishing baselines", or needs to systematically test and measure DSPy program quality with custom or built-in metrics.
 allowed-tools:
   - Read
@@ -62,8 +62,11 @@ evaluator = Evaluate(
 ### Phase 2: Run Evaluation
 
 ```python
-score = evaluator(my_program)
-print(f"Score: {score:.2%}")
+result = evaluator(my_program)
+print(f"Score: {result.score:.2f}%")
+# Access individual results: (example, prediction, score) tuples
+for example, pred, score in result.results[:3]:
+    print(f"Example: {example.question[:50]}... Score: {score}")
 ```
 
 ## Built-in Metrics
@@ -182,22 +185,23 @@ class EvaluationSuite:
     def evaluate(self, program, metric=None) -> EvaluationResult:
         """Run full evaluation with detailed results."""
         metric = metric or comprehensive_metric
-        
+
         evaluator = Evaluate(
             devset=self.devset,
             metric=metric,
             num_threads=self.num_threads,
-            display_progress=True,
-            return_all_scores=True
+            display_progress=True
         )
-        
-        score, results = evaluator(program)
-        
-        correct = sum(1 for r in results if r >= 0.5)
-        errors = sum(1 for r in results if r == 0)
-        
+
+        eval_result = evaluator(program)
+
+        # Extract individual scores from results
+        scores = [score for example, pred, score in eval_result.results]
+        correct = sum(1 for s in scores if s >= 0.5)
+        errors = sum(1 for s in scores if s == 0)
+
         return EvaluationResult(
-            score=score,
+            score=eval_result.score,
             num_examples=len(self.devset),
             correct=correct,
             incorrect=len(self.devset) - correct - errors,

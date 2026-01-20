@@ -43,7 +43,7 @@ from haystack.components.retrievers.in_memory import InMemoryBM25Retriever
 optimized_pipeline = Pipeline()
 optimized_pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=doc_store))
 optimized_pipeline.add_component("prompt_builder", PromptBuilder(template=optimized_prompt))
-optimized_pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
+optimized_pipeline.add_component("generator", OpenAIGenerator(model="gpt-4o-mini"))
 
 optimized_pipeline.connect("retriever", "prompt_builder.context")
 optimized_pipeline.connect("prompt_builder", "generator")

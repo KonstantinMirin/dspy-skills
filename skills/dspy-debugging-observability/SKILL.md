@@ -1,7 +1,7 @@
 ---
 name: dspy-debugging-observability
 version: "1.0.0"
-dspy-compatibility: "2.5+"
+dspy-compatibility: "3.1.2"
 description: This skill should be used when the user asks to "debug DSPy programs", "trace LLM calls", "monitor production DSPy", "use MLflow with DSPy", mentions "inspect_history", "custom callbacks", "observability", "production monitoring", "cost tracking", or needs to debug, trace, and monitor DSPy applications in development and production.
 allowed-tools:
   - Read
@@ -35,14 +35,14 @@ Debug, trace, and monitor DSPy programs using built-in inspection, MLflow tracin
 | Input | Type | Description |
 |-------|------|-------------|
 | `program` | `dspy.Module` | Program to debug/monitor |
-| `callback` | `callable` | Optional custom callback |
+| `callback` | `BaseCallback` | Optional custom callback (subclass of `dspy.utils.callback.BaseCallback`) |
 
 ## Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
-| `history` | `list[dict]` | Execution trace |
-| `metrics` | `dict` | Cost, latency, token counts |
+| `GLOBAL_HISTORY` | `list[dict]` | Raw execution trace from `dspy.clients.base_lm` |
+| `metrics` | `dict` | Cost, latency, token counts from callbacks |
 
 ## Workflow
 
@@ -59,26 +59,42 @@ dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 qa = dspy.ChainOfThought("question -> answer")
 result = qa(question="What is the capital of France?")
 
-# Inspect last execution
-history = dspy.inspect_history(n=1)
-for entry in history:
-    print(f"Prompt: {entry['prompt']}")
-    print(f"Response: {entry['response']}")
-    print(f"Tokens: {entry.get('usage', {})}")
+# Inspect last execution (prints to console)
+dspy.inspect_history(n=1)
+
+# To access raw history programmatically:
+from dspy.clients.base_lm import GLOBAL_HISTORY
+for entry in GLOBAL_HISTORY[-1:]:
+    print(f"Model: {entry['model']}")
+    print(f"Usage: {entry.get('usage', {})}")
+    print(f"Cost: {entry.get('cost', 0)}")
 ```
 
-### Phase 2: MLflow Automatic Tracing
+### Phase 2: MLflow Tracing
 
-As of 2026, DSPy integrates with MLflow without configuration:
+MLflow integration requires explicit setup:
 
 ```python
 import dspy
 import mlflow
 
-# MLflow auto-traces DSPy calls (no setup needed)
-mlflow.start_run()
+# Setup MLflow (4 steps required)
+# 1. Set tracking URI and experiment
+mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_experiment("DSPy")
+
+# 2. Enable DSPy autologging
+mlflow.dspy.autolog(
+    log_traces=True,     # Log traces from module executions
+    log_compiles=True,   # Log optimization progress
+    log_evals=True       # Log evaluation results
+)
 
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+# Configure retriever (required before using dspy.Retrieve)
+rm = dspy.ColBERTv2(url="http://20.102.90.50:2017/wiki17_abstracts")
+dspy.configure(rm=rm)
 
 class RAGPipeline(dspy.Module):
     def __init__(self):
@@ -92,11 +108,10 @@ class RAGPipeline(dspy.Module):
 pipeline = RAGPipeline()
 result = pipeline(question="What is machine learning?")
 
-# View traces in MLflow UI: mlflow ui
-mlflow.end_run()
+# View traces in MLflow UI (run in terminal): mlflow ui --port 5000
 ```
 
-MLflow automatically captures LLM calls, token usage, costs, and execution times.
+MLflow captures LLM calls, token usage, costs, and execution times when autolog is enabled.
 
 ### Phase 3: Custom Callbacks for Production
 
@@ -104,47 +119,50 @@ Build custom callbacks for specialized monitoring:
 
 ```python
 import dspy
+from dspy.utils.callback import BaseCallback
 import logging
 import time
 from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
-class ProductionMonitoringCallback:
+class ProductionMonitoringCallback(BaseCallback):
     """Track cost, latency, and errors in production."""
 
     def __init__(self):
+        super().__init__()
         self.total_cost = 0.0
         self.total_tokens = 0
         self.call_count = 0
         self.errors = []
+        self.start_times = {}
 
-    def __call__(self, event: str, **kwargs) -> None:
-        """Called on LM events: before_call, after_call, on_error."""
+    def on_lm_start(self, call_id, instance, inputs):
+        """Called when LM is invoked."""
+        self.start_times[call_id] = time.time()
 
-        if event == "before_call":
-            kwargs['context']['start_time'] = time.time()
+    def on_lm_end(self, call_id, outputs, exception):
+        """Called after LM finishes."""
+        if exception:
+            self.errors.append(str(exception))
+            logger.error(f"LLM error: {exception}")
+            return
 
-        elif event == "after_call":
-            # Calculate latency
-            start = kwargs.get('context', {}).get('start_time', time.time())
-            latency = time.time() - start
+        # Calculate latency
+        start = self.start_times.pop(call_id, time.time())
+        latency = time.time() - start
 
-            # Extract usage
-            usage = kwargs.get('response', {}).get('usage', {})
-            tokens = usage.get('total_tokens', 0)
-            cost = self._estimate_cost(kwargs.get('model', ''), usage)
+        # Extract usage from outputs
+        usage = outputs.get('usage', {}) if isinstance(outputs, dict) else {}
+        tokens = usage.get('total_tokens', 0)
+        model = outputs.get('model', 'unknown') if isinstance(outputs, dict) else 'unknown'
+        cost = self._estimate_cost(model, usage)
 
-            self.total_tokens += tokens
-            self.total_cost += cost
-            self.call_count += 1
+        self.total_tokens += tokens
+        self.total_cost += cost
+        self.call_count += 1
 
-            logger.info(f"LLM call: {latency:.2f}s, {tokens} tokens, ${cost:.4f}")
-
-        elif event == "on_error":
-            error = kwargs.get('error', 'Unknown error')
-            self.errors.append(error)
-            logger.error(f"LLM error: {error}")
+        logger.info(f"LLM call: {latency:.2f}s, {tokens} tokens, ${cost:.4f}")
 
     def _estimate_cost(self, model: str, usage: Dict[str, int]) -> float:
         """Estimate cost based on model pricing (update rates for 2026)."""
@@ -189,19 +207,23 @@ For high-traffic applications, sample traces to reduce overhead:
 
 ```python
 import random
+from dspy.utils.callback import BaseCallback
 
-class SamplingCallback:
+class SamplingCallback(BaseCallback):
     """Sample 10% of traces."""
 
     def __init__(self, sample_rate: float = 0.1):
+        super().__init__()
         self.sample_rate = sample_rate
         self.sampled_calls = []
 
-    def __call__(self, event: str, **kwargs) -> None:
-        if event == "after_call" and random.random() < self.sample_rate:
+    def on_lm_end(self, call_id, outputs, exception):
+        """Sample a subset of LM calls."""
+        if random.random() < self.sample_rate:
             self.sampled_calls.append({
-                'prompt': kwargs.get('prompt', ''),
-                'response': kwargs.get('response', {})
+                'call_id': call_id,
+                'outputs': outputs,
+                'exception': exception
             })
 
 # Use with high-volume apps
