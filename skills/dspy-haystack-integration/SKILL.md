@@ -1,6 +1,8 @@
 ---
 name: dspy-haystack-integration
-description: Integrate DSPy optimization with existing Haystack pipelines
+version: "1.0.0"
+dspy-compatibility: "3.1.2"
+description: This skill should be used when the user asks to "integrate DSPy with Haystack", "optimize Haystack prompts using DSPy", "use DSPy to improve Haystack pipeline", mentions "Haystack pipeline optimization", "combining DSPy and Haystack", "extract DSPy prompt for Haystack", or wants to use DSPy's optimization capabilities to automatically improve prompts in existing Haystack pipelines.
 allowed-tools:
   - Read
   - Write
@@ -62,7 +64,7 @@ Answer:
 pipeline = Pipeline()
 pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=doc_store))
 pipeline.add_component("prompt_builder", PromptBuilder(template=initial_prompt))
-pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
+pipeline.add_component("generator", OpenAIGenerator(model="gpt-4o-mini"))
 
 pipeline.connect("retriever", "prompt_builder.context")
 pipeline.connect("prompt_builder", "generator")
@@ -122,7 +124,8 @@ def mixed_metric(example, pred, trace=None):
 ```python
 from dspy.teleprompt import BootstrapFewShot
 
-dspy.configure(lm=dspy.LM("openai/gpt-3.5-turbo"))
+lm = dspy.LM("openai/gpt-4o-mini")
+dspy.configure(lm=lm)
 
 # Create DSPy module with Haystack retriever
 rag_module = HaystackRAG(retriever=pipeline.get_component("retriever"))
@@ -139,148 +142,22 @@ compiled = optimizer.compile(rag_module, trainset=trainset)
 
 ### Phase 5: Extract and Apply Optimized Prompt
 
-```python
-def extract_dspy_prompt(compiled_module):
-    """Extract the optimized prompt from compiled DSPy module."""
-    # Get the predictor's demos and instructions
-    predictor = compiled_module.generate
-    
-    demos = getattr(predictor, 'demos', [])
-    
-    # Build prompt with few-shot examples
-    prompt_parts = ["Answer questions using the provided context.\n"]
-    
-    for demo in demos:
-        prompt_parts.append(f"Context: {demo.context}")
-        prompt_parts.append(f"Question: {demo.question}")
-        prompt_parts.append(f"Answer: {demo.answer}\n")
-    
-    prompt_parts.append("Context: {{context}}")
-    prompt_parts.append("Question: {{question}}")
-    prompt_parts.append("Answer:")
-    
-    return "\n".join(prompt_parts)
+After optimization, extract the optimized prompt and apply it to your Haystack pipeline.
 
-optimized_prompt = extract_dspy_prompt(compiled)
-```
-
-### Phase 6: Build Optimized Haystack Pipeline
-
-```python
-# Create new pipeline with optimized prompt
-optimized_pipeline = Pipeline()
-optimized_pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=doc_store))
-optimized_pipeline.add_component("prompt_builder", PromptBuilder(template=optimized_prompt))
-optimized_pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
-
-optimized_pipeline.connect("retriever", "prompt_builder.context")
-optimized_pipeline.connect("prompt_builder", "generator")
-```
+See [Prompt Extraction Guide](references/prompt-extraction.md) for detailed steps on:
+- Extracting prompts from compiled DSPy modules
+- Mapping DSPy demos to Haystack templates
+- Building optimized Haystack pipelines
 
 ## Production Example
 
-```python
-import dspy
-from dspy.teleprompt import BootstrapFewShot
-from haystack import Pipeline, Document
-from haystack.components.generators import OpenAIGenerator
-from haystack.components.builders import PromptBuilder
-from haystack.components.retrievers.in_memory import InMemoryBM25Retriever
-from haystack.document_stores.in_memory import InMemoryDocumentStore
-import logging
+For a complete production-ready implementation, see [HaystackDSPyOptimizer](examples/haystack-dspy-optimizer.py).
 
-logger = logging.getLogger(__name__)
-
-class HaystackDSPyOptimizer:
-    """Optimize Haystack pipelines using DSPy."""
-    
-    def __init__(self, document_store, lm_model="openai/gpt-3.5-turbo"):
-        self.doc_store = document_store
-        self.retriever = InMemoryBM25Retriever(document_store=document_store)
-        dspy.configure(lm=dspy.LM(lm_model))
-    
-    def create_dspy_module(self, k=3):
-        """Create DSPy module wrapping Haystack retriever."""
-        
-        class RAGModule(dspy.Module):
-            def __init__(inner_self):
-                super().__init__()
-                inner_self.generate = dspy.ChainOfThought("context, question -> answer")
-            
-            def forward(inner_self, question):
-                results = self.retriever.run(query=question, top_k=k)
-                context = [doc.content for doc in results.get('documents', [])]
-                
-                if not context:
-                    return dspy.Prediction(context=[], answer="No relevant information found.")
-                
-                pred = inner_self.generate(context=context, question=question)
-                return dspy.Prediction(context=context, answer=pred.answer)
-        
-        return RAGModule()
-    
-    def optimize(self, trainset, metric=None):
-        """Run DSPy optimization."""
-        
-        metric = metric or (lambda ex, pred, trace=None: 
-                           ex.answer.lower() in pred.answer.lower())
-        
-        module = self.create_dspy_module()
-        
-        optimizer = BootstrapFewShot(
-            metric=metric,
-            max_bootstrapped_demos=4,
-            max_labeled_demos=4
-        )
-        
-        compiled = optimizer.compile(module, trainset=trainset)
-        logger.info("DSPy optimization complete")
-        
-        return compiled
-    
-    def build_optimized_pipeline(self, compiled_module):
-        """Create Haystack pipeline with DSPy-optimized prompt."""
-        
-        # Extract demos from compiled module
-        demos = getattr(compiled_module.generate, 'demos', [])
-        
-        # Build optimized prompt template
-        prompt_lines = ["Answer the question using the context provided.\n"]
-        
-        for i, demo in enumerate(demos[:4]):  # Limit to 4 examples
-            prompt_lines.append(f"Example {i+1}:")
-            prompt_lines.append(f"Context: {demo.context[:500]}...")  # Truncate
-            prompt_lines.append(f"Question: {demo.question}")
-            prompt_lines.append(f"Answer: {demo.answer}\n")
-        
-        prompt_lines.extend([
-            "Now answer this question:",
-            "Context: {{context}}",
-            "Question: {{question}}",
-            "Answer:"
-        ])
-        
-        optimized_prompt = "\n".join(prompt_lines)
-        
-        # Build pipeline
-        pipeline = Pipeline()
-        pipeline.add_component("retriever", InMemoryBM25Retriever(document_store=self.doc_store))
-        pipeline.add_component("prompt_builder", PromptBuilder(template=optimized_prompt))
-        pipeline.add_component("generator", OpenAIGenerator(model="gpt-3.5-turbo"))
-        
-        pipeline.connect("retriever", "prompt_builder.context")
-        pipeline.connect("prompt_builder", "generator")
-        
-        return pipeline
-
-# Usage
-optimizer = HaystackDSPyOptimizer(doc_store)
-compiled = optimizer.optimize(trainset)
-pipeline = optimizer.build_optimized_pipeline(compiled)
-
-# Run optimized pipeline
-result = pipeline.run({"retriever": {"query": "What is photosynthesis?"}})
-```
+This class provides:
+- Wrapper for Haystack retrievers in DSPy modules
+- Automatic optimization with BootstrapFewShot
+- Prompt extraction and Haystack pipeline rebuilding
+- Complete usage example with document store setup
 
 ## Best Practices
 

@@ -1,6 +1,8 @@
 ---
 name: dspy-bootstrap-fewshot
-description: Auto-generate high-quality few-shot examples using teacher models in DSPy
+version: "1.0.0"
+dspy-compatibility: "3.1.2"
+description: This skill should be used when the user asks to "bootstrap few-shot examples", "generate demonstrations", "use BootstrapFewShot", "optimize with limited data", "create training demos automatically", mentions "teacher model for few-shot", "10-50 training examples", or wants automatic demonstration generation for a DSPy program without extensive compute.
 allowed-tools:
   - Read
   - Write
@@ -21,6 +23,12 @@ Automatically generate and select optimal few-shot demonstrations for your DSPy 
 - You want demonstrations with reasoning traces
 - Quick optimization without extensive compute
 
+## Related Skills
+
+- For more data (200+ examples): [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md)
+- For agentic systems: [dspy-gepa-reflective](../dspy-gepa-reflective/SKILL.md)
+- Measure improvements: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
+
 ## Inputs
 
 | Input | Type | Description |
@@ -28,8 +36,11 @@ Automatically generate and select optimal few-shot demonstrations for your DSPy 
 | `program` | `dspy.Module` | Your DSPy program to optimize |
 | `trainset` | `list[dspy.Example]` | Training examples |
 | `metric` | `callable` | Evaluation function |
+| `metric_threshold` | `float` | Numerical threshold for accepting demos (optional) |
 | `max_bootstrapped_demos` | `int` | Max teacher-generated demos (default: 4) |
 | `max_labeled_demos` | `int` | Max direct labeled demos (default: 16) |
+| `max_rounds` | `int` | Max bootstrapping attempts per example (default: 1) |
+| `teacher_settings` | `dict` | Configuration for teacher model (optional) |
 
 ## Outputs
 
@@ -82,8 +93,8 @@ compiled_qa = optimizer.compile(QA(), trainset=trainset)
 # Use optimized program
 result = compiled_qa(question="What is photosynthesis?")
 
-# Save for production
-compiled_qa.save("qa_optimized.json")
+# Save for production (state-only, recommended)
+compiled_qa.save("qa_optimized.json", save_program=False)
 ```
 
 ## Production Example
@@ -134,7 +145,7 @@ def optimize_with_bootstrap(trainset, devset):
     logger.info(f"Optimized: {optimized_score:.2%}")
     
     if optimized_score > baseline_score:
-        compiled.save("production_qa.json")
+        compiled.save("production_qa.json", save_program=False)
         return compiled
     
     logger.warning("Optimization didn't improve; keeping baseline")

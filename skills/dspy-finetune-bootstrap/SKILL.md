@@ -1,6 +1,8 @@
 ---
 name: dspy-finetune-bootstrap
-description: Fine-tune LLM weights using DSPy's BootstrapFinetune optimizer
+version: "1.0.0"
+dspy-compatibility: "3.1.2"
+description: This skill should be used when the user asks to "fine-tune a DSPy model", "distill a program into weights", "use BootstrapFinetune", "create a student model", "reduce inference costs with fine-tuning", mentions "model distillation", "teacher-student training", or wants to deploy a DSPy program as fine-tuned weights for production efficiency.
 allowed-tools:
   - Read
   - Write
@@ -55,22 +57,19 @@ class TeacherQA(dspy.Module):
         return self.cot(question=question)
 ```
 
-### Phase 2: Generate Training Traces
+### Phase 2: Enable Experimental Features & Generate Training Traces
 
-BootstrapFinetune automatically generates traces from the teacher:
-
-```python
-optimizer = dspy.BootstrapFinetune(
-    metric=lambda gold, pred, trace=None: gold.answer.lower() in pred.answer.lower()
-)
-```
-
-### Phase 3: Fine-tune Student Model
+BootstrapFinetune is experimental and requires enabling the flag:
 
 ```python
-finetuned = optimizer.compile(
-    TeacherQA(),
-    trainset=trainset,
+import dspy
+from dspy.teleprompt import BootstrapFinetune
+
+# Enable experimental features
+dspy.settings.experimental = True
+
+optimizer = BootstrapFinetune(
+    metric=lambda gold, pred, trace=None: gold.answer.lower() in pred.answer.lower(),
     train_kwargs={
         'learning_rate': 5e-5,
         'num_train_epochs': 3,
@@ -80,15 +79,24 @@ finetuned = optimizer.compile(
 )
 ```
 
+### Phase 3: Fine-tune Student Model
+
+```python
+finetuned = optimizer.compile(
+    TeacherQA(),
+    trainset=trainset
+)
+```
+
 ### Phase 4: Deploy
 
 ```python
-# Save the fine-tuned model
-finetuned.save("finetuned_qa_model")
+# Save the fine-tuned model (saves state-only by default)
+finetuned.save("finetuned_qa_model.json")
 
-# Load and use
+# Load and use (must recreate architecture first)
 loaded = TeacherQA()
-loaded.load("finetuned_qa_model")
+loaded.load("finetuned_qa_model.json")
 result = loaded(question="What is machine learning?")
 ```
 
@@ -96,9 +104,13 @@ result = loaded(question="What is machine learning?")
 
 ```python
 import dspy
+from dspy.teleprompt import BootstrapFinetune
 from dspy.evaluate import Evaluate
 import logging
 import os
+
+# Enable experimental features
+dspy.settings.experimental = True
 
 logger = logging.getLogger(__name__)
 
@@ -132,15 +144,10 @@ def finetune_classifier(trainset, devset, output_dir="./finetuned_model"):
     evaluator = Evaluate(devset=devset, metric=classification_metric, num_threads=8)
     teacher_score = evaluator(teacher)
     logger.info(f"Teacher score: {teacher_score:.2%}")
-    
-    # Fine-tune
-    optimizer = dspy.BootstrapFinetune(
-        metric=classification_metric
-    )
-    
-    finetuned = optimizer.compile(
-        teacher,
-        trainset=trainset,
+
+    # Fine-tune (train_kwargs passed to constructor)
+    optimizer = BootstrapFinetune(
+        metric=classification_metric,
         train_kwargs={
             'learning_rate': 2e-5,
             'num_train_epochs': 3,
@@ -153,18 +160,23 @@ def finetune_classifier(trainset, devset, output_dir="./finetuned_model"):
             'output_dir': output_dir
         }
     )
+
+    finetuned = optimizer.compile(
+        teacher,
+        trainset=trainset
+    )
     
     # Evaluate fine-tuned model
     student_score = evaluator(finetuned)
     logger.info(f"Student score: {student_score:.2%}")
-    
-    # Save
-    finetuned.save(os.path.join(output_dir, "final_model"))
-    
+
+    # Save (state-only as JSON)
+    finetuned.save(os.path.join(output_dir, "final_model.json"))
+
     return {
         "teacher_score": teacher_score,
         "student_score": student_score,
-        "model_path": output_dir
+        "model_path": os.path.join(output_dir, "final_model.json")
     }
 
 # For RAG fine-tuning
@@ -181,29 +193,30 @@ class RAGClassifier(dspy.Module):
 
 def finetune_rag_classifier(trainset, devset):
     """Fine-tune a RAG-based classifier."""
-    
+
     # Configure retriever and LM
     colbert = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
     dspy.configure(
         lm=dspy.LM("openai/gpt-4o"),
         rm=colbert
     )
-    
+
     rag = RAGClassifier()
-    
-    optimizer = dspy.BootstrapFinetune(
-        metric=classification_metric
-    )
-    
-    finetuned = optimizer.compile(
-        rag,
-        trainset=trainset,
+
+    # Fine-tune (train_kwargs in constructor)
+    optimizer = BootstrapFinetune(
+        metric=classification_metric,
         train_kwargs={
             'learning_rate': 1e-5,
             'num_train_epochs': 5
         }
     )
-    
+
+    finetuned = optimizer.compile(
+        rag,
+        trainset=trainset
+    )
+
     return finetuned
 ```
 

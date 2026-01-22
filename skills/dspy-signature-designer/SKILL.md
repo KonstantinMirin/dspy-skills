@@ -1,6 +1,8 @@
 ---
 name: dspy-signature-designer
-description: Design type-safe DSPy signatures with InputField, OutputField, and advanced type hints
+version: "1.0.0"
+dspy-compatibility: "3.1.2"
+description: This skill should be used when the user asks to "create a DSPy signature", "define inputs and outputs", "design a signature", "use InputField or OutputField", "add type hints to DSPy", mentions "signature class", "type-safe DSPy", "Pydantic models in DSPy", or needs to define what a DSPy module should do with structured inputs and outputs.
 allowed-tools:
   - Read
   - Write
@@ -226,9 +228,45 @@ print(f"Aspects: {result.aspects}")
 4. **Default values** - Provide sensible defaults for optional inputs
 5. **Validate types** - Pydantic models ensure structured output
 
+## Advanced Field Options
+
+```python
+# Constraints (available in 3.1.2+)
+class ConstrainedSignature(dspy.Signature):
+    """Example with validation constraints."""
+
+    text: str = dspy.InputField(
+        min_length=5,
+        max_length=100,
+        desc="Input text between 5-100 chars"
+    )
+    number: int = dspy.InputField(
+        gt=0,
+        lt=10,
+        desc="Number between 0 and 10"
+    )
+    score: float = dspy.OutputField(
+        ge=0.0,
+        le=1.0,
+        desc="Score between 0 and 1"
+    )
+    count: int = dspy.OutputField(
+        multiple_of=2,
+        desc="Even number count"
+    )
+
+# Prefix and format
+class FormattedSignature(dspy.Signature):
+    """Example with custom prefix and format."""
+
+    goal: str = dspy.InputField(prefix="Goal:")
+    text: str = dspy.InputField(format=lambda x: x.upper())
+    action: str = dspy.OutputField(prefix="Action:")
+```
+
 ## Limitations
 
-- Complex nested types may require Pydantic
+- Complex nested types require Pydantic models
 - Some LLMs struggle with strict type constraints
-- JSONAdapter works better for structured outputs
-- Field descriptions add to prompt length
+- Field descriptions and constraints add to prompt length
+- Default values only work for InputField, not OutputField

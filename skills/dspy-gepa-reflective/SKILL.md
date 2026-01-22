@@ -1,6 +1,8 @@
 ---
 name: dspy-gepa-reflective
-description: Newest DSPy optimizer using LLM reflection on execution trajectories for agentic systems
+version: "1.0.0"
+dspy-compatibility: "3.1.2"
+description: This skill should be used when the user asks to "optimize an agent with GEPA", "use reflective optimization", "optimize ReAct agents", "provide feedback metrics", mentions "GEPA optimizer", "LLM reflection", "execution trajectories", "agentic systems optimization", or needs to optimize complex multi-step agents using textual feedback on execution traces.
 allowed-tools:
   - Read
   - Write
@@ -20,6 +22,11 @@ Optimize complex agentic systems using LLM reflection on full execution traces w
 - When you have **rich textual feedback** on failures
 - Complex multi-step workflows
 - Instruction-only optimization needed
+
+## Related Skills
+
+- For non-agentic programs: [dspy-miprov2-optimizer](../dspy-miprov2-optimizer/SKILL.md), [dspy-bootstrap-fewshot](../dspy-bootstrap-fewshot/SKILL.md)
+- Measure improvements: [dspy-evaluation-suite](../dspy-evaluation-suite/SKILL.md)
 
 ## Inputs
 
@@ -63,12 +70,14 @@ import dspy
 
 def search(query: str) -> list[str]:
     """Search knowledge base for relevant information."""
-    results = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')(query, k=3)
-    return [r['text'] for r in results]
+    rm = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
+    results = rm(query, k=3)
+    return results if isinstance(results, list) else [results]
 
 def calculate(expression: str) -> float:
     """Safely evaluate mathematical expressions."""
-    return dspy.PythonInterpreter({}).execute(expression)
+    with dspy.PythonInterpreter() as interp:
+        return interp(expression)
 
 agent = dspy.ReAct("question -> answer", tools=[search, calculate])
 ```
@@ -105,10 +114,9 @@ class ResearchAgent(dspy.Module):
     
     def search(self, query: str) -> list[str]:
         """Search for relevant documents."""
-        results = dspy.ColBERTv2(
-            url='http://20.102.90.50:2017/wiki17_abstracts'
-        )(query, k=5)
-        return [r['text'] for r in results]
+        rm = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
+        results = rm(query, k=5)
+        return results if isinstance(results, list) else [results]
     
     def summarize(self, text: str) -> str:
         """Summarize long text into key points."""
@@ -153,7 +161,7 @@ def optimize_research_agent(trainset, devset):
         score, _ = detailed_feedback_metric(example, pred, trace)
         return score
     
-    evaluator = Evaluate(devset=devset, metric=eval_metric, num_threads=8)
+    evaluator = Evaluate(devset=devset, num_threads=8, metric=eval_metric)
     baseline = evaluator(agent)
     logger.info(f"Baseline: {baseline:.2%}")
     
