@@ -210,7 +210,7 @@ optimizer = dspy.GEPA(
 
 ## Official Documentation
 
-- **DSPy Documentation**: https://dspy.ai/
-- **DSPy GitHub**: https://github.com/stanfordnlp/dspy
-- **GEPA Optimizer**: https://dspy.ai/api/optimizers/GEPA/
-- **Agents Guide**: https://dspy.ai/tutorials/agents/
+- **DSPy Documentation**: [https://dspy.ai/](https://dspy.ai/)
+- **DSPy GitHub**: [https://github.com/stanfordnlp/dspy](https://github.com/stanfordnlp/dspy)
+- **GEPA Optimizer**: [https://dspy.ai/api/optimizers/GEPA/](https://dspy.ai/api/optimizers/GEPA/)
+- **Agents Guide**: [https://dspy.ai/tutorials/agents/](https://dspy.ai/tutorials/agents/)
