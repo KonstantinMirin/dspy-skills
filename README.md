@@ -4,17 +4,45 @@ A marketplace containing the **dspy-skills** plugin - a comprehensive collection
 
 ## Installation
 
-Install the plugin using Claude Code:
+### Option 1: Install from GitHub
 
 ```bash
+# In Claude Code, run:
 /plugin add OmidZamani/dspy-skills
 ```
 
-Or install locally:
+### Option 2: Install Locally
 
 ```bash
-/plugin add /path/to/dspy-skills-fork
+# Clone the repository
+git clone https://github.com/OmidZamani/dspy-skills.git
+cd dspy-skills
+
+# In Claude Code, run:
+/plugin add /path/to/dspy-skills
 ```
+
+### Option 3: Development Mode
+
+For development or testing:
+
+```bash
+# Launch Claude Code with the plugin directory
+cc --plugin-dir /path/to/dspy-skills
+```
+
+### Verify Installation
+
+After installation, verify the plugin is loaded:
+
+```bash
+# List installed plugins
+/plugin list
+
+# You should see "dspy-skills" in the list
+```
+
+Skills will automatically activate when you ask questions related to DSPy optimization, RAG pipelines, agents, or evaluation.
 
 ## What's Inside
 

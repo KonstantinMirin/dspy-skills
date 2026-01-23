@@ -33,9 +33,10 @@ venv/
 env/
 ENV/
 
-# IDE
+# IDE and local settings
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
