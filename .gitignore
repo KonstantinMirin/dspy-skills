@@ -44,3 +44,4 @@ ENV/
 *.json
 !.claude-plugin/marketplace.json
 !.claude-plugin/plugin.json
+!plugins/*/.claude-plugin/plugin.json
