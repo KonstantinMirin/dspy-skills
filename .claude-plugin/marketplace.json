@@ -1,0 +1,39 @@
+{
+    "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+    "name": "dspy-skills",
+    "version": "1.0.0",
+    "description": "Collection of 14 skills for DSPy framework - program language models, optimize prompts, and build RAG pipelines systematically",
+    "owner": {
+        "name": "OmidZamani",
+        "email": "omid@example.com"
+    },
+    "plugins": [
+        {
+            "name": "dspy-skills",
+            "source": "./plugins/dspy-skills",
+            "description": "Collection of 14 skills for DSPy framework - program language models, optimize prompts, and build RAG pipelines systematically. Includes optimizers, pipelines, agents, and debugging tools for production LLM applications.",
+            "version": "1.0.0",
+            "author": {
+                "name": "OmidZamani",
+                "email": "omid@example.com"
+            },
+            "category": "development",
+            "keywords": [
+                "dspy",
+                "llm",
+                "optimization",
+                "rag",
+                "agents",
+                "prompt-engineering",
+                "few-shot",
+                "bayesian-optimization",
+                "react-agents",
+                "evaluation",
+                "fine-tuning"
+            ],
+            "homepage": "https://github.com/OmidZamani/dspy-skills",
+            "repository": "https://github.com/OmidZamani/dspy-skills",
+            "license": "MIT"
+        }
+    ]
+}
